@@ -1,4 +1,4 @@
-#!/bin/sh
+##!/bin/sh
 
 aps () {
     sudo apt-get update -qq
