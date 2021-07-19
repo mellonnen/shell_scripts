@@ -1,4 +1,6 @@
 #!/bin/sh
+
+# Creates a new private project on Github
 create () {
 cd ~/projects
 gh repo create "$1" --enable-issues 

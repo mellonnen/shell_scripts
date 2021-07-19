@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# Checks the for used/unused JS dependencies
 DIRNAME=${1:-.}
 cd $DIRNAME
 

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Fixes corrupt zsh history
 fix_history(){
 mv ~/.zsh_history ~/.zsh_history_bad
 strings ~/.zsh_history_bad > ~/.zsh_history

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# checks if the LunarVim config has updates
+# Checks if the LunarVim config has updates
 check_lunarvim_update () {
   tput civis
   git -C ~/.config/nvim fetch 2> /dev/null & #run fetch in background 

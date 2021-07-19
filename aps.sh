@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# apt-get browser using fzf
 aps () {
     sudo apt-get update -qq
     

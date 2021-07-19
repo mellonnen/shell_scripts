@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Homebrew browser usinf fzf
 brews () {
     
     search=$(brew formulae | cut -d' ' -f1 | fzf -m --preview="brew info {}" --bind=space:toggle-preview --preview-window=:hidden)
