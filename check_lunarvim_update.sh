@@ -3,7 +3,7 @@
 # Checks if the LunarVim config has updates
 check_lunarvim_update () {
   tput civis
-  git -C ~/.config/lvim fetch 2> /dev/null & #run fetch in background 
+  git -C ~/.local/share/lunarvim/lvim fetch 2> /dev/null & #run fetch in background 
 
   PID=$! #Get process ID
 
@@ -17,7 +17,7 @@ check_lunarvim_update () {
     sleep .05
   done
 
-  STATUS=$(git -C ~/.config/nvim status)
+  STATUS=$(git -C ~/.local/share/lunarvim/lvim status)
   MESSAGE=$(echo "$STATUS" | awk 'FNR==2{ print }')
 
   # check if you are behind latest commit
