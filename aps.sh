@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# INSPIRATION: https://www.youtube.com/watch?v=QeJkAs_PEQQ&t=108s
 # apt-get browser using fzf
 aps () {
     sudo apt-get update -qq
