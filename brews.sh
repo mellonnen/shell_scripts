@@ -4,11 +4,11 @@
 # Homebrew browser usinf fzf
 brews () {
     
-    search=$(brew formulae | cut -d' ' -f1 | fzf -m --preview="brew info {}" --bind=space:toggle-preview --preview-window=:hidden)
+  search=$(brew formulae | cut -d' ' -f1 | fzf -m --preview="brew info {}" --bind=space:toggle-preview --multi)
     if [ -z "$search" ] 
         then
     return
     else
-        brew install "$search"
+      echo "$search" | xargs brew install
     fi
 }
