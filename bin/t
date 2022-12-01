@@ -1,0 +1,22 @@
+#/bin/sh
+
+REPO=$(fd -g ".git" ~ -t d -H -E ".local" -E "Library" -E ".nvm" -E ".cargo" -E ".oh-my-zsh" -x dirname |
+      fzf --preview="tree -C -L 2 {}" --bind="space:toggle-preview" --scheme="path" --border)
+if [ -z $REPO ]; then 
+  exit 0
+fi
+
+NAME=$(basename $REPO)
+
+SESSION=$(tmux list-sessions | grep $NAME | awk '{print $1}')
+SESSION=${SESSION//:/}
+
+if [ -z  "$SESSION" ]; then
+    tmux new-session -d -c $REPO -s $NAME 
+fi
+
+if [ "$TMUX" ]; then
+  tmux switch-client -t $NAME
+else
+  tmux attach-session -t $NAME
+fi
