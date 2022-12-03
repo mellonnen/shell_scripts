@@ -1,20 +1,35 @@
 #/bin/sh
 
+# Find the repo/name. We can toggle between looking in the active sessions list
+# or looking on the file system for git projects.
 REPO=$(fd -g ".git" ~ -t d -H -E ".local" -E "Library" -E ".nvm" -E ".cargo" -E ".oh-my-zsh" -x dirname |
-      fzf --preview="tree -C -L 2 {}" --bind="space:toggle-preview" --scheme="path" --border)
+      fzf \
+      --preview="if [[ -d {} ]]; then tree -C -L 2 {}; else tmux capture-pane -p -e;fi" \
+      --bind="space:toggle-preview" \
+      --scheme="path" \
+      --border \
+      --prompt="Git Projects ~ " \
+      --header='CTRL-P: Git Projects / CTR-S: Active Sessions' \
+      --bind='ctrl-p:change-prompt(Git Projects ~ )+reload(fd -g ".git" ~ -t d -H -E ".local" -E "Library" -E ".nvm" -E ".cargo" -E ".oh-my-zsh" -x dirname )'\
+      --bind='ctrl-s:change-prompt(Active Sessions ~ )+reload(tmux list-sessions | awk "{ print $1 }" | cut -d ":" -f1)')
+
+  # Break if no result was selected.
 if [ -z $REPO ]; then 
   exit 0
 fi
 
+# Extract the name of the repo (in the case of a session this will yield the session name).
 NAME=$(basename $REPO)
 
-SESSION=$(tmux list-sessions | grep $NAME | awk '{print $1}')
-SESSION=${SESSION//:/}
+SESSION=$(tmux list-sessions | grep $NAME | awk '{print $1}' | cut -d ":" -f1)
 
+# Create session detached if it does not exists.
 if [ -z  "$SESSION" ]; then
     tmux new-session -d -c $REPO -s $NAME 
 fi
 
+# If we are in tmux, switch to the session.
+# Otherwise attach to the session.
 if [ "$TMUX" ]; then
   tmux switch-client -t $NAME
 else
