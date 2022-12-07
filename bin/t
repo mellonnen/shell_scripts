@@ -4,7 +4,7 @@
 # or looking on the file system for git projects.
 REPO=$(fd -g ".git" ~ -t d -H -E ".local" -E "Library" -E ".nvm" -E ".cargo" -E ".oh-my-zsh" -x dirname |
       fzf \
-      --preview="if [[ -d {} ]]; then tree -C -L 2 {}; else tmux capture-pane -p -e;fi" \
+      --preview="if [[ -d {} ]]; then tree -C -L 2 {}; else tmux capture-pane -p -e -t {};fi" \
       --bind="space:toggle-preview" \
       --scheme="path" \
       --border \
