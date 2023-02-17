@@ -1,0 +1,75 @@
+#!/bin/bash
+# Script for exploring logs of pods in k8s cluster.
+
+
+namespace=""
+stern_query=""
+
+# Command line flags.
+while getopts ":q:n:h:" OPTION; do
+  case "$OPTION" in
+    q)
+      stern_query=$(echo "$OPTARG" | xargs)
+      ;;
+    n)
+      namespace=$(echo "$OPTARG" | xargs)
+      ;;
+    h)
+      echo "script usage: logctl [-h] [-q <stern query>] [-n <namespace> (defaults to all)]"
+      exit 0
+      ;;
+    ?)
+      echo "script usage: logctl [-h] [-q <stern query>] [-n <namespace> (defaults to all)]" >&2
+      exit 1
+      ;;
+  esac
+done
+shift "$((OPTIND -1))"
+
+# Dynamically set the namespace flag.
+flags=()
+if [ -z "$namespace" ]; then
+  flags+=( --all-namespaces )
+else
+  flags+=( "-n=$namespace" )
+fi
+
+
+
+# If we did not supply a stern query, we then find all deployments and cronjobs and allow the user
+# to filter out which log to look at.
+if [ -z "$stern_query" ]; then
+  deployments=$(kubectl get deploy "${flags[@]}"| tr -s " " "," | csvcut -c NAME | tail -n +2 | uniq -u)
+  cronjobs=$(kubectl get cronjobs "${flags[@]}" | tr -s " " "," | csvcut -c NAME | tail -n +2 | uniq -u)
+  stern_query=$(printf "%s\n%s" "$deployments" "$cronjobs"| gum filter --placeholder="Choose logs from deploy/cronjob...")
+fi
+
+
+# Add stern flags
+flags+=( --output=raw )
+flags+=( --no-follow )
+
+
+# Enter loop where we can see all logs, query with jq and fuzzy find
+while :
+do
+  all_lines=$(stern "$stern_query" "${flags[@]}" 2> /dev/null)
+  mode=$(gum choose "view all logs" "query with jq" "fuzzy find" "quit")
+  case $mode in
+
+    "view all logs")
+      echo "$all_lines" | jq -C | gum pager
+      ;;
+
+    "query with jq")
+      jq_query=$(gum input --placeholder="Type jq query...")
+      echo "$all_lines" | jq "$(echo "$jq_query")" -C | gum pager
+      ;;
+
+    "fuzzy find")
+      echo "$all_lines" | gum filter | jq -C | gum pager
+      ;;
+    "quit")
+      exit 0
+  esac
+done
