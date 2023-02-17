@@ -1,0 +1,7 @@
+#!/bin/bash
+# Script for switching between available kubernetes contexts
+
+current_ctx=$(kubectl config current-context)
+ctx=$(kubectl config get-contexts | tail -n +2 | awk '{ print $2 }' | tr '\n' ' ' | xargs gum choose --selected="$current_ctx")
+
+kubectl config use "$ctx"
