@@ -19,8 +19,5 @@ NAME.md:
 # Launch okular for preview and start a file watcher.
 .PHONY:
 watch: 
-	okular NAME.pdf 2>/dev/null &
-	while true; do \
-		make; \
-		fswatch -1 --event Updated .; \
-	done
+	skim NAME.pdf 
+	./watch.sh

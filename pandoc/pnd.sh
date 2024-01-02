@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # pnd copies the Makefile and subistutes the target names with the provided name of the document
 pnd () {
   if [[ $1 == "" ]]; then
@@ -6,5 +6,6 @@ pnd () {
     return
   fi
   sed "s/NAME/$1/g" ~/shell_scripts/pandoc/pandoc.Makefile > ./Makefile
+  cp ~/shell_scripts/pandoc/watch.sh .
   make
 }
