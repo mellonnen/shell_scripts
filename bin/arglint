@@ -1,0 +1,22 @@
+#!/bin/bash
+# Script that validates go commandline flags provided in a kubernetes files.
+
+gohelp="$1"
+[ -z "$gohelp" ] && "No go help provided!" && exit 1
+# Extract commandline flags from go help output
+export flags=$(echo "$gohelp" |tail -n +4 | awk 'NR%2!=0{ print $1 }' | sort)
+function lintfile() {
+  # Extract the arguments array from yaml file.
+	args=$(yq '.spec.template.spec.containers[0].args[]' < "$1" | cut -f1 -d"=" | cut -f1 -d" " | sort)
+	# Get flags provided in yaml file not present in the go help output.
+	wrongflags=$(comm -23 <(echo "$args") <(echo "$flags"))
+	# Check if variable is set, and print error message.
+	if [ -n "$wrongflags" ]; then
+		printf "Found flag(s) in %s that does not seem to be supported\n%s\n" "$1" "$wrongflags" 
+		exit 1
+	fi
+}
+export -f lintfile
+find ./k8s -name "args.yaml" -exec bash -c 'lintfile "{}"' \;
+
+unset -v flags
