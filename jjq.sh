@@ -2,5 +2,8 @@
 
 # Use `jq` with both JSON and non-JSON lines.
 jjq () {
-    jq -R -r "${1:-.} as \$line | try fromjson catch \$line"
+    if [ -n "$1" ]; then
+        query=" | $1"
+    fi 
+    jq -R -r ". as \$line | try (fromjson$query) catch \$line"
 }
