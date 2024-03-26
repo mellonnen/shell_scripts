@@ -41,7 +41,8 @@ fi
 if [ -z "$stern_query" ]; then
   deployments=$(kubectl get deploy "${flags[@]}"| tr -s " " "," | csvcut -c NAME | tail -n +2 | uniq -u)
   cronjobs=$(kubectl get cronjobs "${flags[@]}" | tr -s " " "," | csvcut -c NAME | tail -n +2 | uniq -u)
-  stern_query=$(printf "%s\n%s" "$deployments" "$cronjobs"| gum filter --placeholder="Choose logs from deploy/cronjob...")
+  sets=$(kubectl get statefulsets "${flags[@]}" | tr -s " " "," | csvcut -c NAME | tail -n +2 | uniq -u)
+  stern_query=$(printf "%s\n%s" "$deployments" "$cronjobs" "$sets"| gum filter --placeholder="Choose logs from deploy/cronjob/statefulsets...")
 fi
 
 
@@ -62,12 +63,14 @@ do
       ;;
 
     "query with jq")
-      jq_query=$(gum input --placeholder="Type jq query...")
-      echo "$all_lines" | jq "$(echo "$jq_query")" -C | gum pager
+      wrapped=$(echo "$all_lines" | sed -e '1s/^/[/' -e 's/$/,/' -e '$s/,$/]/')
+      echo "$wrapped" | jqp
+      # jq_query=$(gum input --placeholder="Type jq query...")
+      # echo "$all_lines" | jq "$(echo "$jq_query")" -C | gum pager
       ;;
 
     "fuzzy find")
-      echo "$all_lines" | gum filter | jq -C | gum pager
+      echo "$all_lines" | gum filter --no-limit | jq -C | gum pager
       ;;
     "quit")
       exit 0
