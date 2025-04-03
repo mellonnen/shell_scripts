@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Helper function that checks if we should run the verification in the current directory.
+should_verify() {
+	# Use the go list command to check if the module has 
+	# any packages with go files.
+	gofiles=$(go list -e -f '{{.GoFiles}}' ./... 2>/dev/null)
+	# Check if the output is empty or an empty array.
+	if [[ -z "$gofiles" || "$gofiles" = "[]" ]]; then
+		return 1
+	fi
+	return 0
+}
+
+
+# Helper function that runs the verifications; formatting, linting  and testing.
+# If one of the steps fails the commands output is printed.
+run_go_verification() {
+	printf "Formatting...\t"
+	fmt_res=$(gofmt -l .)
+	if [ -n "$fmt_res" ]; then # Check if the format command outputs anything.
+		printf "fail\n"
+		echo "$fmt_res"
+		return 1;
+	fi
+	printf "ok\n"
+
+	printf "Linting...\t"
+	lint_output=$(mktemp) || return 1;
+	golangci-lint run ./... > "$lint_output"
+	if [ "$?" = "1" ]; then # Check if the linting command exits with status code 1.
+		printf "fail\n"
+		cat "$lint_output"
+		return 1;
+	fi
+	printf "ok\n"
+
+	printf "Testing...\t"
+	go clean -testcache || return 1;
+	test_output=$(mktemp) || return 1;
+	go test --failfast 2>/dev/null ./... > "$test_output"
+
+	if [ "$?" = "1" ]; then # Check if the testing command exits with status code 1.
+		printf "fail\n"
+		cat "$test_output"
+		return 1;
+	fi
+	printf "ok\n"
+}
+
+# Find all go modules recursively, check if the go module is verifiable, and runs the verification.
+find . -name 'go.mod' | xargs -n 1 dirname | sort -u | while read line; do
+	( cd "$line"
+		should_verify || exit 0 # Check if we should verify, if not exit with 0
+		echo "Module: $line"
+		run_go_verification || exit 1 # Run the go verification
+		echo ""
+	) || exit 1
+done

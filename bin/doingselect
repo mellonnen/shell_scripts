@@ -1,0 +1,5 @@
+#!/bin/bash
+
+section=$(doing sections | xargs -n 1 | gum choose)
+
+doing select --section="$section"

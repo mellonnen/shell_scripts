@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+dependency=$(go list -m -f '{{if not .Indirect}}{{.Path}}{{end}}' all | gum filter --fuzzy) || exit 1
+
+path=$(gum file --directory=true --file=false --header "$dependency") || exit 1
+
+go mod edit -replace "$dependency=$path"
